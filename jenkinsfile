@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/angeldavid2002/Backend-Inventory.git'
+                git branch: 'main', 'https://github.com/angeldavid2002/Backend-Inventory.git'
             }
         }
         stage('Install Dependencies') {
