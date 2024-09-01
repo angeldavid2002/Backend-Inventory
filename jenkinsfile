@@ -1,43 +1,58 @@
 pipeline {
     agent any
 
-    environment {
-        NODE_HOME = tool name: 'NodeJS 14', type: 'NodeJS'
-        PATH = "${env.NODE_HOME}/bin:${env.PATH}"
-        SONARQUBE_SERVER = 'sonarqube'
+    tools {
+        nodejs 'NodeJS 14' // Asegúrate de que este nombre coincida con lo que configuraste en Jenkins
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/angeldavid2002/ARQUITECTURA-DE-SOFTWARE.git' // Configura tu repositorio
+                // Clonar el repositorio desde GitHub
+                git url: 'https://github.com/angeldavid2002/Backend-Inventory.git', branch: 'main'
             }
         }
 
         stage('Install Dependencies') {
             steps {
+                // Instalar las dependencias del proyecto
                 sh 'npm install'
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
+                // Ejecutar las pruebas unitarias
                 sh 'npm test'
             }
         }
 
         stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarQube Scanner' // Asegúrate de que el nombre coincida con lo que configuraste en Jenkins
+            }
             steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh 'npm run sonar' // Ejecuta el análisis de SonarQube
+                withSonarQubeEnv('SonarQube') { // 'SonarQube' es el nombre de la instancia de SonarQube configurada en Jenkins
+                    sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
     }
 
     post {
+        always {
+            echo 'El pipeline terminó.'
+        }
         success {
-            echo 'Pipeline ejecutado exitosamente!'
+            echo 'El pipeline se completó con éxito.'
         }
         failure {
             echo 'El pipeline falló.'
