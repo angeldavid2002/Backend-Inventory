@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    environment {
+        NODE_HOME = tool name: 'NodeJS 14', type: 'NodeJS'
+        PATH = "${env.NODE_HOME}/bin:${env.PATH}"
+        SONARQUBE_SERVER = 'sonarqube'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/angeldavid2002/ARQUITECTURA-DE-SOFTWARE.git' // Configura tu repositorio
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh 'npm run sonar' // Ejecuta el análisis de SonarQube
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline ejecutado exitosamente!'
+        }
+        failure {
+            echo 'El pipeline falló.'
+        }
+    }
+}
